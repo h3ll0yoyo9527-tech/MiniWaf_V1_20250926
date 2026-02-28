@@ -1,0 +1,198 @@
+{
+    "general": {
+        "login_password": "123456",
+        "logout_param": "MiniWafLogout",
+        "dashboard_param": "MiniWafDashboard",
+        "token_param": "MiniWafToken",
+        "token_duration": 600,
+        "blockRequestText": "no",
+        "check_sql": true,
+        "check_rce": true,
+        "check_fi": true,
+        "check_deserialization": true,
+        "check_xss": true,
+        "check_xxe": true,
+        "check_ssrf": true,
+        "check_flag_file": true,
+        "check_upload": true,
+        "phpCodeExec": true,
+        "request_body_log_max_length": 100,
+        "response_body_log_max_length": 10,
+        "upload_content_max_length": 100,
+        "max_decode_depth": "5",
+        "banned_ips": [
+            "1.1.1.1",
+            "1.1.1.2",
+            "192.168.1.1"
+        ],
+        "tokens": {
+            "a45310f57c87864c92da9875b549d9c7169d8a323571e35af8dfc03b54471b71": {
+                "authenticated": true,
+                "login_time": 1772179809,
+                "expire_time": 1772180409,
+                "ip": "127.0.0.1"
+            }
+        }
+    },
+    "patterns": {
+        "sql": [
+            "\/\\b(SELECT\\s+\\w+\\s+FROM|INSERT\\s+INTO\\s+\\w+|UPDATE\\s+\\w+\\s+SET|DELETE\\s+FROM\\s+\\w+|DROP\\s+(TABLE|DATABASE)\\s+\\w+|ALTER\\s+TABLE\\s+\\w+|CREATE\\s+(TABLE|DATABASE)\\s+\\w+|TRUNCATE\\s+TABLE\\s+\\w+)\\b\/i",
+            "\/\\bUNION\\s+(ALL\\s+)?SELECT\\s+[\\w\\s,()]+FROM\\b\/i",
+            "\/\\b(OR|AND|XOR|NOT)\\s+(\\d+\\s*=\\s*\\d+|''''[^'''']*''''\\s*=\\s*''''[^'''']*'''')\\s*(OR|AND|XOR|NOT)?\\b\/i",
+            "\/--\\s*[^\\n\\r]*$\/m",
+            "\/#.*$\/m",
+            "\/\\\/\\*[^*]*\\*+(?:[^\\\/\\*][^*]*\\*+)*\\\/\/s",
+            "\/\\b(LOAD_FILE|INTO\\s+(OUTFILE|DUMPFILE)|SLEEP|BENCHMARK)\\s*\\(\/i",
+            "\/\\bINFORMATION_SCHEMA\\.(TABLES|COLUMNS|SCHEMATA)\\b\/i",
+            "\/@@(VERSION|DATADIR)\\b\/i",
+            "\/(CONCAT|CONCAT_WS)\\(.*\\)\/i",
+            "\/0x[0-9a-fA-F]{8,}\/i",
+            "\/\\b\\d+\\s*(OR|AND)\\b\\s+.*?\/i",
+            "\/\\b(?:AND|OR|XOR|NOT)\\s+['\"`][^'\"`]*['\"`]\\s*[=<>]+\\s*['\"`][^'\"`]*['\"`]\/i",
+            "\/extractvalue\\s*\\(\\s*[^,]+,\\s*concat\\s*\\(\/i",
+            "\/updatexml\\s*\\(\\s*[^,]+,\\s*concat\\s*\\(\/i",
+            "\/exp\\s*\\(\\s*~\\s*\\(\/i",
+            "\/floor\\s*\\(\\s*rand\\s*\\([^)]*\\)\\s*\\*\\s*2\\s*\\)\/i",
+            "\/\\b(?:geometrycollection|multipoint|polygon|linestring)\\s*\\([^)]*select\/i",
+            "\/\\)\\s*(AND|OR)\\s*\\(.*?=.*?\/i",
+            "\/['\"`][\\s;]*(OR|AND|UNION|SELECT)\\b\\s+.*?['\"`]\\?\\s*[=<>].*?\/i",
+            "\/\\b\\d+\\s*=\\s*\\d+\\b|['\"]\\w*['\"]\\s*=\\s*['\"]\\w*['\"]\/i"
+        ],
+        "rce": [
+            "\/`[^`]*(?:\\$|\\||&|;|>|<|\\b(?:cat|ls|rm|wget|curl|bash|sh)\\b)[^`]*`\/i",
+            "\/\\b(?:os\\.system|os\\.popen|subprocess\\.(?:run|call|check_output|Popen))\\s*\\(\/i",
+            "\/\\b(?:child_process\\.(?:exec|execSync|spawn))\\s*\\(\/i",
+            "\/\\bRuntime\\.getRuntime\\(\\)\\.exec\\s*\\(\/i",
+            "\/\\bSystem\\.Diagnostics\\.Process\\.Start\\s*\\(\/i",
+            "\/<\\?(?:php|=)?\\s*(?:eval|system|exec|passthru|shell_exec)\/i",
+            "\/<%\\s*(?:eval|Execute|Response\\.Write)\/i",
+            "\/\\b(?:eval|assert)\\s*\\(\\s*\\$(?:_(?:POST|GET|REQUEST|COOKIE)|\\w+)\/i",
+            "\/\\bcreate_function\\s*\\([^,]*,\\s*\\$(?:_(?:POST|GET|REQUEST|COOKIE)|\\w+)\/i",
+            "\/base64_decode\\s*\\([^)]*[+\\\/0-9A-Za-z]{20,}\/i",
+            "\/str_rot13\\s*\\(\/i",
+            "\/gzinflate\\s*\\(|gzuncompress\\s*\\(|gzdecode\\s*\\(\/i",
+            "\/urldecode\\s*\\(|rawurldecode\\s*\\(\/i",
+            "\/hex2bin\\s*\\(|bin2hex\\s*\\(\/i",
+            "\/strrev\\s*\\(\/i",
+            "\/convert_uuencode\\s*\\(|convert_uudecode\\s*\\(\/i",
+            "\/(\\$\\w+\\.)*\\$\\w+\\(\\s*['\"][^'\"]*['\"]\\s*\\)\/"
+        ],
+        "fi": [
+            "\/(?:\\.{2,}[\\\/\\\\]|%2e{2,}%2f|%2e{2,}%5c|\\.{2,}%2f|\\.{2,}%5c|\\.{2,}[\\\/\\\\][^\\\/\\\\]*){2,}|[\\\/\\\\]\\.{2,}[\\\/\\\\]\/i",
+            "\/\\b(?:php|file|expect|phar|zip|gz|zlib|bzip2|rar|data|gopher|ftp|ssh2|scp|sftp|glob|http|https|ftps|compress\\.zlib|compress\\.bzip2)\\s*:\\s*\\\/\/i",
+            "\/data:\\\/\\\/[^,;]*;base64,[a-zA-Z0-9+\\\/=]+\/i",
+            "\/\\\/(?:apache|nginx|httpd)\\\/(?:logs|conf)\\\/[^\\s]*\\.(?:log|conf)\/i",
+            "\/\\b(?:etc\\\/passwd|boot\\.ini|win\\.ini|system32|\\\/etc\\\/shadow|\\\/proc\\\/self)\\b\/i",
+            "\/\\b(?:passwd|shadow|group|hosts|httpd\\.conf|my\\.cnf)\\b.*\\.\\.\\\/\/i",
+            "\/\\x00\/i"
+        ],
+        "deserialization": [
+            "\/\\b(?:unserialize|json_decode)\\s*\\(\/i",
+            "\/\\b(?:unserialize|json_decode)\\s*\\([^)]*\\bO:\\d+:\\s*[\\\"\\'](?:SoapClient|SplDoublyLinkedList|Phar|SimpleXMLElement|DOMDocument|Exception|Error|ReflectionFunction|GuzzleHttp\\\\Client|Monolog\\\\Handler\\\\SyslogUdpHandler|Zend\\\\Di\\\\Di|CodeIgniter\\\\Session\\\\Handlers\\\\DatabaseHandler)[\\\"\\']\/i",
+            "\/\\b(?:unserialize|json_decode)\\s*\\([^)]*\\b(?:Tzo|Qzo|YTo|czo|aTo|Tjs=)\/i",
+            "\/\\b(?:base64_decode|gzinflate|gzuncompress|str_rot13)\\s*\\([^)]*\\b(?:Tzo|O:|rknj|flfgrz|c3lzdGVt|ZXZhbHw=)\/i",
+            "\/%[0-9a-fA-F]{2}%[0-9a-fA-F]{2}(?:O%3A|a%3A|s%3A)\/i",
+            "\/O\\s*:\\s*\\d+\\s*:\\s*[\\\"\\']\\s*(?:SoapClient|SplDoublyLinkedList)\/i",
+            "\/^O:\\d+:\/m",
+            "\/\\b(?:InvokerTransformer|InstantiateTransformer|ChainedTransformer|ConstantTransformer|GuzzleHttp\\\\Client|Monolog\\\\Handler\\\\SyslogUdpHandler)\/i"
+        ],
+        "xss": [
+            "\/<[\\s\\\/]*script[^>]*>[^<]*<\\\/script[^>]*>\/i",
+            "\/<[\\s\\\/]*script[^>]*>\/i",
+            "\/on\\w+\\s*=\\s*[\\\"\\'][^\\\"\\']*?[\\\"\\']\/i",
+            "\/<[\\s\\\/]*img[^>]*on\\w+[^>]*>\/i",
+            "\/<[\\s\\\/]*svg[^>]*on\\w+[^>]*>\/i",
+            "\/<[\\s\\\/]*iframe[^>]*>\/i",
+            "\/javascript\\s*:\/i",
+            "\/data\\s*:\\s*text\\\/html\\s*;\/i",
+            "\/expression\\s*\\(\/i",
+            "\/document\\s*\\.\\s*(write|cookie|location)\/i",
+            "\/\\{\\{.*?\\}\\}\/i",
+            "\/[?&](callback|jsonp)\\s*=\\s*(eval|alert|prompt|confirm)?\\s*\\(?[^&]*\\)?\/i",
+            "\/String\\.fromCharCode\\s*\\(\/i",
+            "\/alert\\s*\\(\/i"
+        ],
+        "xxe": [
+            "\/<\\?xml[^>]*>\\s*<!DOCTYPE[^>]*\\[\\s*<!ENTITY[^>]*>\\s*\\]>\/i",
+            "\/loadExternalDTD|resolveEntity|setExternalGeneralEntities|setExternalParameterEntities|setFeature.*http:\\\/\\\/xml\\.org\\\/sax\\\/features\\\/external-general-entities|setFeature.*http:\\\/\\\/xml\\.org\\\/sax\\\/features\\\/external-parameter-entities\/i",
+            "\/<!DOCTYPE.*\\[.*<!ENTITY.*%.*remote.*SYSTEM.*['\"'][^'\"]*http[^'\"]*['\"'].*>.*%remote.*;.*\\]>\/i",
+            "\/<svg[^>]*>.*<!ENTITY\\s+%[^>]*SYSTEM\\s*[\\\"'][^>]*http[^>]*[\\\"'][^>]*>.*%[^;]*;.*<\\\/svg>\/i",
+            "\/(<soap:Envelope[^>]*>.*<!DOCTYPE[^>]*\\[.*<!ENTITY[^>]*SYSTEM[^>]*>.*\\]>.*<\\\/soap:Envelope>|<soap:Body[^>]*>.*&(?!amp|lt|gt|quot|apos)[^;\\s]*;.*<\\\/soap:Body>)\/i",
+            "\/<soap:Header[^>]*>.*<!ENTITY\\s+%[^>]*SYSTEM\\s*[\\\"'][^>]*(http|file):[^>]*[\\\"'][^>]*>.*%[^;]*;.*<\\\/soap:Header>\/i",
+            "\/<\\?mso-application[^>]*progid\\s*=\\s*[\\\"'][^\\\"']*Excel\\.Sheet[\\\"'][^>]*\\?>\/i",
+            "\/<\\?mso-application[^>]*progid\\s*=\\s*[\\\"'][^\\\"']*Word\\.Document[\\\"'][^>]*\\?>\/i",
+            "\/<w:wordDocument.*>.*<!ENTITY.*SYSTEM.*>.*<\\\/w:wordDocument>\/i",
+            "\/(<xi:include[^>]*href\\s*=\\s*[\\\"'][^\\\"']*file:[^\\\"']*[\\\"'][^>]*>|xmlns:xi\\s*=\\s*[\\\"'][^\\\"']*http:\\\/\\\/www\\.w3\\.org\\\/2001\\\/XInclude[\\\"'][^>]*|<xi:include[^>]*parse\\s*=\\s*[\\\"'][^\\\"']*text[\\\"'][^>]*>)\/i",
+            "\/<!ENTITY\\s+[^>]*SYSTEM\\s*[\\\"'][\\s]*file:\\\/\\\/[^>]*[\\\"'][^>]*>\/i",
+            "\/<!DOCTYPE\\s+[^>]*\\[\\s*<!ENTITY\\s+[^>]*SYSTEM\\s*[\\\"'][^>]*file:[^>]*[\\\"'][^>]*>\\s*\\]\/i",
+            "\/<!\\[CDATA\\[\/i"
+        ],
+        "banned_visit_domain_blacklist": [
+            "localhost",
+            "localdomain",
+            "*.internal",
+            "*.intranet",
+            "*.priv",
+            "*.private",
+            "*.corp",
+            "*.corporate",
+            "*.vpn",
+            "*.dmz",
+            "*.dev",
+            "*.test",
+            "*.qa",
+            "*.staging",
+            "*baidu.com"
+        ],
+        "ip_obfuscation_patterns": [
+            "\/(?:(?:127\\.0\\.0\\.1|2130706433|0x7f000001|0177\\.0\\.0\\.1|127\\.1|127\\.0\\.1|127\\.0\\.0\\.0x[0-9a-fA-F]+|１２７．０．０．１|¹²⁷․⁰․⁰․¹))\/",
+            "\/(?:(?:10(?:\\.[0-9]{1,3}){3}|(?:16777216[0-9]|1677721[7-9]\\d|167772[2-9]\\d{2}|16777[3-9]\\d{3}|16778\\d{4}|16779\\d{4}|16780\\d{4}|16781\\d{4}|16782\\d{4}|16783\\d{4}|16784\\d{4}|16785\\d{4}|16786\\d{4}|16787\\d{4}|16788\\d{4}|16789\\d{4}|16790\\d{4}|16791\\d{4}|16792\\d{4}|16793\\d{4}|16794\\d{4}|16795\\d{4}|16796\\d{4}|16797\\d{4}|16798\\d{4}|16799\\d{4}|168\\d{5}|169\\d{5}|170\\d{5}|171\\d{5}|172\\d{5}|173\\d{5}|174\\d{5}|175\\d{5}|176\\d{5}|177\\d{5}|178\\d{5}|179\\d{5}|180\\d{5}|181\\d{5}|182\\d{5}|183\\d{5}|184\\d{5}|18454[8-9]\\d{3}|184549[0-3]\\d{2}|1845494[0-9]\\d|1845495[0-5])|0x0a[0-9a-fA-F]{6}|010(?:\\.[0-9]{1,3}){3}|１０．０．０．１|10\\.(?:0x[0-9a-fA-F]+|\\d+)(?:\\.(?:0x[0-9a-fA-F]+|\\d+)){2})\/",
+            "\/(?:(?:172\\.(?:1[6-9]|2[0-9]|3[01])(?:\\.[0-9]{1,3}){2}|0xac1[0-9a-fA-F]{6}|0254\\.(?:02[0-7]|03[0-7])(?:\\.(?:[0-7]{1,3})){2}|１７２．１６．０．１|０２５４．０２０．０．１|0xac100001|172\\.(?:0x1[0-9a-fA-F]{1,2}|1[6-9]|2[0-9]|3[01])(?:\\.(?:0x[0-9a-fA-F]+|\\d+)){2})\/",
+            "\/(?:(?:0300\\.0250(?:\\.[0-7]{1,3}){2}|0xc0a8[0-9a-fA-F]{4}|192\\.168\\.(?:0x[0-9a-fA-F]+|\\+)\\.(?:0x[0-9a-fA-F]+|\\d+)|192\\.168(?:\\.[0-9]{1,3}){2})\/"
+        ],
+        "flag_file": [
+            "\/flag\\.(txt|php|html|htm)\/i",
+            "\/\\bflag{[^}]+}\/i",
+            "\/flag\\b\/i"
+        ],
+        "phpCodeExec": [
+            "\/\\b(?:phpinfo|phpversion|get_defined_vars|get_defined_constants|php_uname|php_sapi_name|php_ini_loaded_file)\\s*\\(\/i",
+            "\/\\b(?:file_get_contents|readfile|fopen|fread|curl_exec)\\s*\\(\/i",
+            "\/\\b(?:highlight_file|show_source)\\s*\\(\/i",
+            "\/\\b(?:file_put_contents|fwrite)\\s*\\(\/i",
+            "\/\\b(?:system|exec|shell_exec|passthru|popen|proc_open|pcntl_exec)\\s*\\(\/i",
+            "\/\\b(?:eval|assert|create_function)\\s*\\(\/i",
+            "\/\\b(?:include|require|include_once|require_once)\\s*\\(\/i",
+            "\/\\b(?:move_uploaded_file|copy|rename)\\s*\\(\/i",
+            "\/\\b(?:chmod|chown|chgrp)\\s*\\(\/i",
+            "\/\\b(?:putenv|dl|ini_set|ini_alter)\\s*\\(\/i",
+            "\/\\b(?:preg_replace|mb_ereg_replace|mb_eregi_replace)\\s*\\\/[^\\\/]*e[^\\\/]*\\\/[^)]*\\)\/i",
+            "\/\\b(?:\\$\\w+\\s*\\(\\s*\\$_(?:GET|POST|REQUEST|COOKIE)|\\$\\w+\\s*=\\s*\\$_(?:GET|POST|REQUEST|COOKIE).*\\$\\w+\\s*\\()\/i",
+            "\/\\b(?:call_user_func|call_user_func_array|array_map|array_filter|array_walk)\\s*\\([^)]*\\$_(?:GET|POST|REQUEST|COOKIE)\/i",
+            "\/\\b(?:ob_start|register_shutdown_function|set_error_handler)\\s*\\([^)]*\\$_(?:GET|POST|REQUEST|COOKIE)\/i",
+            "\/\\b(?:extract|parse_str|mb_parse_str)\\s*\\([^)]*\\$_(?:GET|POST|REQUEST|COOKIE)\/i"
+        ],
+        "upload_whitelist": [
+            "\/\\.(jpg|jpeg|png|gif|bmp|pdf|txt|doc|docx|xls|xlsx)$\/i"
+        ],
+        "upload_black_ext": [
+            "\/\\.(php|phtml|php3|php4|php5|php7|phps|php8|pl|py|rb|sh|bash|exe|bat|cmd|js|jsp|asp|aspx|html|htm|xml)$\/i"
+        ],
+        "upload_content_check": [
+            "\/<\\?(?:php|=)|<script\\s+language\\s*=\\s*[\\\"']?php[\\\"']?\/i",
+            "\/\\b(?:eval|assert|create_function|base64_decode|base64_encode|gzuncompress|gzdecode|gzinflate|gzdeflate|zlib_decode|urlencode|urldecode|rawurlencode|rawurldecode|htmlspecialchars|htmlentities|chr|ord|bin2hex|hex2bin|serialize|unserialize)\\s*\\(\/i"
+        ],
+        "skip_headers": [
+            "Content-Type",
+            "Accept",
+            "Accept-Encoding",
+            "Accept-Language",
+            "Cache-Control",
+            "Connection",
+            "Upgrade-Insecure-Requests",
+            "Sec-CH-UA",
+            "Sec-CH-UA-Mobile",
+            "Sec-CH-UA-Platform"
+        ]
+    }
+}
